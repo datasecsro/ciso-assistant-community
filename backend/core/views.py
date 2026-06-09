@@ -307,6 +307,7 @@ class NullableModelMultipleChoiceField(forms.ModelMultipleChoiceField):
 
         return super().clean(v for v in value if v != "--")
 
+
 class NullableChoiceFilter(df.MultipleChoiceFilter):
     """
     A filter that supports filtering for null values using '--' as a special value.
@@ -382,7 +383,6 @@ class NullableModelChoiceFilter(df.ModelMultipleChoiceFilter):
             filters |= Q(**{f"{self.field_name}__in": real_objects})
 
         return qs.filter(filters)
-
 
 
 def add_unset_option(choices):
@@ -11101,7 +11101,7 @@ class RequirementViewSet(BaseModelViewSet):
 
 
 class EvidenceFilterSet(GenericFilterSet):
-    owner = NullableModelChoiceFilter(queryset = Actor.objects.all())
+    owner = NullableModelChoiceFilter(queryset=Actor.objects.all())
 
     class Meta:
         model = Evidence
