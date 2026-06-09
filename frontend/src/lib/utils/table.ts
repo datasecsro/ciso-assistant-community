@@ -76,11 +76,6 @@ const CONTENT_TYPE_OPTIONS = [
 	{ label: 'ENCLAVE', value: 'EN' }
 ];
 
-const YES_NO_CAPITAL_OPTIONS = [
-	{ label: 'YES', value: 'YES' },
-	{ label: 'NO', value: 'NO' }
-];
-
 const RISK_STAGE_OPTIONS = [
 	{ label: 'Inherent', value: 'inherent' },
 	{ label: 'Current', value: 'current' },
@@ -240,7 +235,7 @@ export const RISK_ASSESSMENT_STATUS_FILTER: ListViewFilterConfig = {
 		label: 'status',
 		browserCache: 'force-cache',
 		multiple: true,
-		nullable: true
+		acceptNullValue: true
 	}
 };
 
@@ -259,7 +254,7 @@ export const QUANT_RISK_SCENARIO_STATUS_FILTER: ListViewFilterConfig = {
 		label: 'status',
 		browserCache: 'force-cache',
 		multiple: true,
-		nullable: true
+		acceptNullValue: true
 	}
 };
 export const RISK_STAGE_FILTER: ListViewFilterConfig = {
@@ -345,9 +340,9 @@ export const RISK_TOLERANCE_FILTER: ListViewFilterConfig = {
 	component: AutocompleteSelect,
 	props: {
 		label: 'withinTolerance',
-		options: YES_NO_CAPITAL_OPTIONS,
+		options: YES_NO_OPTIONS,
 		multiple: false,
-		nullable: true
+		acceptNullValue: true
 	}
 };
 
@@ -1240,8 +1235,7 @@ export const EVIDENCE_STATUS_FILTER: ListViewFilterConfig = {
 		optionsLabelField: 'label',
 		optionsValueField: 'value',
 		browserCache: 'force-cache',
-		multiple: true,
-		nullable: true
+		multiple: true
 	}
 };
 
@@ -1265,7 +1259,7 @@ export const EVIDENCE_OWNER_FILTER: ListViewFilterConfig = {
 		optionsValueField: 'id',
 		optionsEndpoint: 'actors',
 		multiple: true,
-		nullable: true
+		acceptNullValue: true
 	}
 };
 

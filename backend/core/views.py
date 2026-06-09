@@ -11,6 +11,7 @@ import re
 import yaml
 from django_filters.filterset import filterset_factory
 from django_filters.utils import try_dbfield
+from django import forms
 import regex
 import os
 import uuid
@@ -296,6 +297,16 @@ def _serve_attachment(attachment_filter):
     return response
 
 
+class NullableModelMultipleChoiceField(forms.ModelMultipleChoiceField):
+    def clean(self, value):
+        if value is None:
+            return super().clean(value)
+
+        if not isinstance(value, (list, tuple)):
+            value = [value]
+
+        return super().clean(v for v in value if v != "--")
+
 class NullableChoiceFilter(df.MultipleChoiceFilter):
     """
     A filter that supports filtering for null values using '--' as a special value.
@@ -337,6 +348,41 @@ class NullableChoiceFilter(df.MultipleChoiceFilter):
         else:
             # No valid values, return empty queryset
             return qs.none()
+
+
+class NullableModelChoiceFilter(df.ModelMultipleChoiceFilter):
+    """
+    A model multiple choice filter which supports filtering for null values using "--" to represent null.
+    """
+
+    field_class = NullableModelMultipleChoiceField
+
+    def filter(self, qs, value):
+        raw_values = []
+        parent_request = getattr(self.parent, "request", None)
+
+        if parent_request is not None:
+            raw_values = self.parent.request.query_params.getlist(self.field_name)
+
+        if not raw_values and hasattr(self.parent.data, "getlist"):
+            raw_values = self.parent.data.getlist(self.field_name)
+
+        if not raw_values:
+            return qs
+
+        has_null = "--" in raw_values
+        real_objects = value
+
+        filters = Q()
+
+        if has_null:
+            filters |= Q(**{f"{self.field_name}__isnull": True})
+
+        if real_objects:
+            filters |= Q(**{f"{self.field_name}__in": real_objects})
+
+        return qs.filter(filters)
+
 
 
 def add_unset_option(choices):
@@ -11055,24 +11101,7 @@ class RequirementViewSet(BaseModelViewSet):
 
 
 class EvidenceFilterSet(GenericFilterSet):
-    status = NullableChoiceFilter(choices=Evidence.Status.choices)
-
-    def filter_queryset(self, queryset):
-        queryset = super().filter_queryset(queryset)
-        owner_values = self.data.getlist("owner")
-        if not owner_values:
-            return queryset
-        has_null = "--" in owner_values
-        real_actors = Actor.objects.filter(
-            id__in=[v for v in owner_values if v != "--"]
-        )
-        if has_null and real_actors:
-            return queryset.filter(
-                Q(owner__isnull=True) | Q(owner__in=real_actors)
-            ).distinct()
-        elif has_null:
-            return queryset.filter(owner__isnull=True)
-        return queryset.filter(owner__in=real_actors).distinct()
+    owner = NullableModelChoiceFilter(queryset = Actor.objects.all())
 
     class Meta:
         model = Evidence
@@ -11088,6 +11117,7 @@ class EvidenceFilterSet(GenericFilterSet):
             "genericcollection",
             "expiry_date",
             "contracts",
+            "status",
             "processings",
         ]
 
